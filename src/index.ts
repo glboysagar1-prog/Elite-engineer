@@ -6,7 +6,7 @@
 
 // Types
 export * from '../dashboard/convex/types/github';
-export * from '../dashboard/convex/types/github-api';
+export * from '../dashboard/convex/types/github_api';
 export * from '../dashboard/convex/types/roles';
 export * from '../dashboard/convex/types/scores';
 

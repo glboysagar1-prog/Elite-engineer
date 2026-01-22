@@ -12,14 +12,14 @@ import type {
   Issue,
   RepositoryContribution,
   GitHubActivity,
-} from '../types/github';
+} from '../../dashboard/convex/types/github';
 import type {
   GitHubAPIRepository,
   GitHubAPIPullRequest,
   GitHubAPIReview,
   GitHubAPIIssue,
   RateLimitStatus,
-} from '../types/github-api';
+} from '../../dashboard/convex/types/github_api';
 
 // ============================================================================
 // Configuration
@@ -377,14 +377,14 @@ export class GitHubAnalyzer {
     const batchSize = 5;
     for (let i = 0; i < repos.length; i += batchSize) {
       const batch = repos.slice(i, i + batchSize);
-      
+
       await Promise.all(
         batch.map(async (repo) => {
           const [owner, repoName] = repo.full_name.split('/');
 
           // Fetch PRs
           const prs = await this.fetchMergedPullRequests(owner, repoName, this.config.username);
-          
+
           for (const pr of prs) {
             // Fetch additional PR data
             const [files, reviews, reviewComments] = await Promise.all([
