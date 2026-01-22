@@ -235,42 +235,48 @@ export function CandidateTable({ candidates, selectedIds, onSelect, onCompare }:
                                         </div>
 
                                         {/* Verified Evidence Column (Span 2) */}
-                                        <div className="space-y-2 col-span-2">
-                                            <h4 className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
-                                                <Zap className="h-3 w-3" /> Top Verified Evidence
-                                            </h4>
-                                            <div className="space-y-2">
-                                                {candidate.evidence.length > 0 ? candidate.evidence.slice(0, 3).map((item: any, i: number) => (
-                                                    <div key={i} className="flex items-start gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm">
-                                                        <div className={`mt-0.5 p-1 rounded ${item.type === 'merged_pr' ? 'bg-purple-100 text-purple-700' :
-                                                            item.type === 'code_review' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
-                                                            }`}>
-                                                            {item.type === 'merged_pr' ? <Zap className="h-3 w-3" /> : <Target className="h-3 w-3" />}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center justify-between">
-                                                                <p className="text-sm font-medium truncate">{item.data.description}</p>
-                                                                <Badge variant="secondary" className="text-[10px] h-5">
-                                                                    Impact: {item.data.impact}
-                                                                </Badge>
+                                        <div className="space-y-6 col-span-2">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {/* Top Evidence */}
+                                                <div className="space-y-2">
+                                                    <h4 className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
+                                                        <Zap className="h-3 w-3" /> Top Verified Evidence
+                                                    </h4>
+                                                    <div className="space-y-2">
+                                                        {candidate.evidence.length > 0 ? candidate.evidence.slice(0, 3).map((item: any, i: number) => (
+                                                            <div key={i} className="flex items-start gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm">
+                                                                <div className={`mt-0.5 p-1 rounded ${item.type === 'merged_pr' ? 'bg-purple-100 text-purple-700' :
+                                                                    item.type === 'code_review' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
+                                                                    }`}>
+                                                                    {item.type === 'merged_pr' ? <Zap className="h-3 w-3" /> : <Target className="h-3 w-3" />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0 text-left">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <p className="text-sm font-medium truncate">{item.data.description}</p>
+                                                                        <Badge variant="secondary" className="text-[10px] h-5">
+                                                                            {item.data.impact}
+                                                                        </Badge>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                                                                <span className="font-mono">{item.data.repository}</span>
-                                                                <span>•</span>
-                                                                <span>{item.type.replace('_', ' ').toUpperCase()}</span>
+                                                        )) : (
+                                                            <div className="text-sm text-slate-500 italic p-4 text-center border border-dashed rounded-md">
+                                                                No high-impact evidence found.
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
-                                                )) : (
-                                                    <div className="text-sm text-slate-500 italic p-4 text-center border border-dashed rounded-md">
-                                                        No high-impact evidence found.
-                                                    </div>
-                                                )}
+                                                </div>
+
+                                                {/* CRM: Contact History */}
+                                                <ContactHistory candidateId={candidate.id} />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                                        <div className="flex gap-2">
+                                            <AddToJobButton candidateId={candidate.id} />
+                                        </div>
                                         <Button size="sm" onClick={() => alert("Navigate to full profile")}>
                                             View Full Audit Profile
                                         </Button>
@@ -284,3 +290,49 @@ export function CandidateTable({ candidates, selectedIds, onSelect, onCompare }:
         </div>
     )
 }
+
+function AddToJobButton({ candidateId }: { candidateId: string }) {
+    const jobs = useQuery(api.crm.listJobs);
+    const addCandidateToJob = useMutation(api.crm.addCandidateToJob);
+    const [isOpen, setIsOpen] = useState(false);
+    const [addedJobs, setAddedJobs] = useState<string[]>([]);
+
+    const handleAdd = async (jobId: string) => {
+        await addCandidateToJob({ jobId: jobId as any, candidateId: candidateId as any });
+        setAddedJobs([...addedJobs, jobId]);
+        setTimeout(() => setIsOpen(false), 1000);
+    };
+
+    return (
+        <div className="relative">
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => setIsOpen(!isOpen)}>
+                <Briefcase className="h-3.5 w-3.5" />
+                Add to Job
+            </Button>
+
+            {isOpen && (
+                <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-slate-900 border rounded-lg shadow-xl z-50 p-2 animate-in fade-in slide-in-from-bottom-2">
+                    <p className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase">Select Job</p>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {jobs?.length === 0 && <p className="text-xs text-slate-500 p-2 italic">No jobs found.</p>}
+                        {jobs?.map(job => (
+                            <button
+                                key={job._id}
+                                onClick={() => handleAdd(job._id)}
+                                className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex justify-between items-center"
+                            >
+                                <span className="truncate">{job.title}</span>
+                                {addedJobs.includes(job._id) && <CheckSquare className="h-3 w-3 text-green-500" />}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+import { ContactHistory } from "./CRMComponents"
+import { Briefcase } from "lucide-react"
+import { useMutation, useQuery } from "convex/react"
+import { api } from "../../convex/_generated/api"

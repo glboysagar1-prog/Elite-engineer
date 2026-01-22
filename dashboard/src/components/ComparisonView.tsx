@@ -4,6 +4,7 @@ import { Badge } from "./ui/badge"
 import { X, Check } from "lucide-react"
 import { Card, CardHeader, CardTitle } from "./ui/card"
 import { ScoreRing } from "./ui/score-ring"
+import { motion } from "framer-motion"
 
 interface ComparisonViewProps {
     candidates: any[];
@@ -28,6 +29,7 @@ export function ComparisonView({ candidates, onClose }: ComparisonViewProps) {
                         {/* Labels Column */}
                         <div className="space-y-8 pt-32 text-sm font-semibold text-muted-foreground">
                             <div className="h-24 flex items-center">Overall Match</div>
+                            <div className="h-40 flex items-center">Score Overlay</div>
                             <div className="h-32 flex items-center">Trust & Integrity</div>
                             <div className="h-32 flex items-center">Impact & Output</div>
                             <div className="h-32 flex items-center">Fit & Stack</div>
@@ -52,6 +54,38 @@ export function ComparisonView({ candidates, onClose }: ComparisonViewProps) {
                                         <div className="flex flex-col">
                                             <span className="text-2xl font-bold">{c.matchScore.matchScore}</span>
                                             <span className="text-xs text-muted-foreground uppercase">{c.matchScore.matchLevel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Score Overlay (The "Compare" feature) */}
+                                <div className="h-40 flex flex-col justify-center space-y-6 bg-slate-50 dark:bg-slate-800/20 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-inner">
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-[10px] uppercase font-bold text-blue-500">
+                                            <span>Trust Score</span>
+                                            <span>{c.trustScore.total}%</span>
+                                        </div>
+                                        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${c.trustScore.total}%` }}
+                                                transition={{ duration: 1, ease: "easeOut" }}
+                                                className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-[10px] uppercase font-bold text-amber-500">
+                                            <span>Impact Score</span>
+                                            <span>{c.impactScore.total}%</span>
+                                        </div>
+                                        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${c.impactScore.total}%` }}
+                                                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                                                className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.4)]"
+                                            />
                                         </div>
                                     </div>
                                 </div>

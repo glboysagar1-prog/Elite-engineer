@@ -30,4 +30,24 @@ export default defineSchema({
         }),
         evidence: v.array(v.any()), // Stores evidence items
     }).index("by_user", ["userId"]),
+
+    // CRM: Job Folders for shortlisting
+    jobs: defineTable({
+        recruiterId: v.id("users"),
+        title: v.string(),
+        description: v.optional(v.string()),
+        candidateIds: v.array(v.id("users")),
+        status: v.union(v.literal("active"), v.literal("archived")),
+    }).index("by_recruiter", ["recruiterId"]),
+
+    // CRM: Logging contact history
+    contactHistory: defineTable({
+        recruiterId: v.id("users"),
+        candidateId: v.id("users"),
+        platform: v.union(v.literal("email"), v.literal("linkedin"), v.literal("phone")),
+        timestamp: v.number(),
+        note: v.optional(v.string()),
+    }).index("by_recruiter", ["recruiterId"])
+        .index("by_candidate", ["candidateId"])
+        .index("by_recruiter_candidate", ["recruiterId", "candidateId"]),
 });

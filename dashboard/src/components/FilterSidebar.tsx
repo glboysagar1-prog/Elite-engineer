@@ -198,6 +198,11 @@ export function FilterSidebar({ filters, onFilterChange, onReset, resultCount }:
                 </Accordion>
             </div>
 
+            {/* Job Folders (CRM) */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+                <JobManager />
+            </div>
+
             {/* Footer */}
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
                 <Button
@@ -212,3 +217,5 @@ export function FilterSidebar({ filters, onFilterChange, onReset, resultCount }:
         </div>
     )
 }
+
+import { JobManager } from "./CRMComponents"

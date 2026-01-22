@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as crm from "../crm.js";
 import type * as github from "../github.js";
 import type * as scores_compatibility from "../scores/compatibility.js";
 import type * as scores_impact from "../scores/impact.js";
@@ -26,6 +27,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  crm: typeof crm;
   github: typeof github;
   "scores/compatibility": typeof scores_compatibility;
   "scores/impact": typeof scores_impact;
