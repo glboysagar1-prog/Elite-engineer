@@ -10,13 +10,13 @@
 import { inngest } from './inngest-client';
 import { createGitHubAnalyzer } from '../utils/github-analyzer';
 import { Octokit } from '@octokit/rest';
-import { calculateImpactScore } from '../scores/impact';
-import { calculateTrustScore } from '../scores/trust';
-import { calculateCompatibilityScore } from '../scores/compatibility';
-import { calculateRecruiterMatchScore } from '../scores/recruiterMatch';
-import type { GitHubActivity } from '../types/github';
-import type { GitHubAccount, ContributionPattern } from '../types/github';
-import type { RoleQuery } from '../types/roles';
+import { calculateImpactScore } from '../../dashboard/convex/scores/impact';
+import { calculateTrustScore } from '../../dashboard/convex/scores/trust';
+import { calculateCompatibilityScore } from '../../dashboard/convex/scores/compatibility';
+import { calculateRecruiterMatchScore } from '../../dashboard/convex/scores/recruiterMatch';
+import type { GitHubActivity } from '../../dashboard/convex/types/github';
+import type { GitHubAccount, ContributionPattern } from '../../dashboard/convex/types/github';
+import type { RoleQuery } from '../../dashboard/convex/types/roles';
 
 // ============================================================================
 // Event Types
@@ -84,7 +84,7 @@ export const engineerAnalysisJob = inngest.createFunction(
     // Step 1: Check if we need to fetch (idempotent check)
     const shouldFetch = await step.run('check-cache', async () => {
       if (forceRefresh) return true;
-      
+
       // Check if we have recent data (e.g., < 24 hours old)
       // This is idempotent - same username = same result
       const cached = await checkCachedData(username);

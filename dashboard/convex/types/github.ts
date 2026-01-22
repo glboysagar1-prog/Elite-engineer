@@ -43,7 +43,7 @@ export interface PRAnalysis {
   languages: Set<string>;
   directories: Set<string>;
   isInfrastructureChange: boolean;
-  isAPIC change: boolean;
+  isAPIChange: boolean;
   isUIChange: boolean;
   isDatabaseChange: boolean;
   isConfigChange: boolean;
@@ -153,13 +153,13 @@ export interface ContributionPattern {
   openPRs: number;
   closedPRs: number;
   selfMergedPRs: number;
-  
+
   // Fork vs original repo contributions
   forkPRs: number;
   originalRepoPRs: number;
   forkOnlyRepos: string[]; // Repos where all PRs are to forks
   originalRepoContributions: number;
-  
+
   // Temporal patterns
   firstContributionDate: Date | null;
   lastContributionDate: Date | null;
@@ -167,27 +167,27 @@ export interface ContributionPattern {
   contributionMonths: number; // Months with at least one contribution
   averagePRsPerDay: number;
   maxPRsInSingleDay: number;
-  
+
   // Repository patterns
   uniqueRepositories: number;
   repositoriesWithMultiplePRs: number;
   repositoriesWithMaintainerInteraction: number;
-  
+
   // Review patterns
   reviewsGiven: number;
   reviewsReceived: number;
   maintainerReviews: number; // Reviews from repo maintainers
-  
+
   // Issue patterns
   issuesOpened: number;
   issuesClosed: number;
   issuesWithPRs: number; // Issues that led to PRs
-  
+
   // Commit patterns (for pattern detection, not counting)
   commitMessagePatterns: Map<string, number>; // Pattern -> count
   commitTimePatterns: number[]; // Hour of day for commits
   identicalCommitMessages: number; // Count of duplicate commit messages
-  
+
   // Collaboration signals
   uniqueCollaborators: number;
   maintainerInteractions: number;

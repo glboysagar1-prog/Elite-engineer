@@ -5,16 +5,16 @@
  */
 
 // Types
-export * from './types/github';
-export * from './types/github-api';
-export * from './types/roles';
-export * from './types/scores';
+export * from '../dashboard/convex/types/github';
+export * from '../dashboard/convex/types/github-api';
+export * from '../dashboard/convex/types/roles';
+export * from '../dashboard/convex/types/scores';
 
 // Score Calculators
-export { calculateImpactScore } from './scores/impact';
-export { calculateTrustScore } from './scores/trust';
-export { calculateCompatibilityScore } from './scores/compatibility';
-export { calculateRecruiterMatchScore } from './scores/recruiterMatch';
+export { calculateImpactScore } from '../dashboard/convex/scores/impact';
+export { calculateTrustScore } from '../dashboard/convex/scores/trust';
+export { calculateCompatibilityScore } from '../dashboard/convex/scores/compatibility';
+export { calculateRecruiterMatchScore } from '../dashboard/convex/scores/recruiterMatch';
 
 // GitHub Analyzer
 export { createGitHubAnalyzer, GitHubAnalyzer } from './utils/github-analyzer';

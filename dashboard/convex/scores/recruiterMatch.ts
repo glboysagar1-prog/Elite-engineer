@@ -16,134 +16,6 @@ import type {
   EngineerView,
   RecruiterMatchScoreResult,
 } from '../types/scores';
-  weights?: {
-    trust?: number; // Default 0.4 (40%)
-    compatibility?: number; // Default 0.4 (40%)
-    impact?: number; // Default 0.2 (20%)
-  };
-  
-  // Minimum thresholds (scores below these fail the match)
-  minimumThresholds?: {
-    trust?: number; // Default 50
-    compatibility?: number; // Default 30
-    impact?: number; // Default 20
-  };
-  
-  // Boost factors for exceptional performance
-  boostFactors?: {
-    highTrustBoost?: number; // Default 1.1 (10% boost if trust > 80)
-    highCompatibilityBoost?: number; // Default 1.15 (15% boost if compatibility > 85)
-    highImpactBoost?: number; // Default 1.05 (5% boost if impact > 90)
-  };
-}
-
-export interface RecruiterView {
-  // Main score
-  matchScore: number; // 0-100
-  matchLevel: 'excellent' | 'strong' | 'good' | 'fair' | 'poor';
-  recommendation: 'strongly-recommend' | 'recommend' | 'consider' | 'not-recommended';
-  
-  // Component scores (simplified for recruiters)
-  trustScore: number;
-  fitScore: number; // Compatibility renamed for clarity
-  impactScore: number;
-  
-  // Quick insights
-  strengths: string[];
-  concerns: string[];
-  
-  // Match quality indicators
-  isAuthentic: boolean;
-  isGoodFit: boolean;
-  hasImpact: boolean;
-  
-  // Red flags (only show critical issues)
-  redFlags: string[];
-  
-  // Summary explanation
-  summary: string;
-}
-
-export interface EngineerView {
-  // Their own scores (full transparency)
-  trustScore: {
-    total: number;
-    isAuthentic: boolean;
-    confidence: number;
-    components: {
-      accountAuthenticity: number;
-      contributionAuthenticity: number;
-      collaborationSignals: number;
-      antiGamingScore: number;
-    };
-    greenFlags: string[];
-    redFlags: string[];
-  };
-  
-  compatibilityScore: {
-    total: number;
-    compatibilityLevel: string;
-    signals: {
-      technologyStackMatch: number;
-      domainContributionDepth: number;
-      architecturePatternMatch: number;
-      fileTypeAlignment: number;
-      activityTypeMatch: number;
-      repositoryTypeMatch: number;
-      reviewDomainExpertise: number;
-    };
-    strengths: string[];
-    weaknesses: string[];
-  };
-  
-  impactScore: {
-    total: number;
-    components: {
-      prImpact: number;
-      collaboration: number;
-      longevity: number;
-      quality: number;
-    };
-    signals: {
-      totalMergedPRs: number;
-      activeRepositories: number;
-      activitySpanMonths: number;
-    };
-  };
-  
-  // What they can improve
-  improvementSuggestions: string[];
-  
-  // Privacy: They don't see recruiter match score or recommendations
-}
-
-export interface RecruiterMatchScoreResult {
-  // Combined score
-  totalMatchScore: number; // 0-100
-  
-  // Component scores
-  trustComponent: number;
-  compatibilityComponent: number;
-  impactComponent: number;
-  
-  // Recruiter view (simplified, actionable)
-  recruiterView: RecruiterView;
-  
-  // Engineer view (full transparency, no match score)
-  engineerView: EngineerView;
-  
-  // Metadata
-  calculationDetails: {
-    weights: { trust: number; compatibility: number; impact: number };
-    thresholds: { trust: number; compatibility: number; impact: number };
-    boosts: {
-      trustBoost: number;
-      compatibilityBoost: number;
-      impactBoost: number;
-    };
-  };
-}
-
 const DEFAULT_CONFIG: Required<RecruiterMatchScoreConfig> = {
   weights: {
     trust: 0.4, // 40% - Most important: Is this person real and reliable?
@@ -209,7 +81,7 @@ function calculateWeightedScore(
       boosts: { trust: 1, compatibility: 1, impact: 1 },
     };
   }
-  
+
   if (compatibilityScore < config.minimumThresholds.compatibility) {
     return {
       total: 0,
@@ -219,7 +91,7 @@ function calculateWeightedScore(
       boosts: { trust: 1, compatibility: 1, impact: 1 },
     };
   }
-  
+
   if (impactScore < config.minimumThresholds.impact) {
     return {
       total: 0,
@@ -229,35 +101,35 @@ function calculateWeightedScore(
       boosts: { trust: 1, compatibility: 1, impact: 1 },
     };
   }
-  
+
   // Apply boosts for exceptional performance
   let trustBoost = 1;
   let compatibilityBoost = 1;
   let impactBoost = 1;
-  
+
   if (trustScore > 80) {
     trustBoost = config.boostFactors.highTrustBoost;
   }
-  
+
   if (compatibilityScore > 85) {
     compatibilityBoost = config.boostFactors.highCompatibilityBoost;
   }
-  
+
   if (impactScore > 90) {
     impactBoost = config.boostFactors.highImpactBoost;
   }
-  
+
   // Calculate weighted components
   const trustComponent = trustScore * config.weights.trust * trustBoost;
   const compatibilityComponent = compatibilityScore * config.weights.compatibility * compatibilityBoost;
   const impactComponent = impactScore * config.weights.impact * impactBoost;
-  
+
   // Total score (capped at 100)
   const total = Math.min(
     trustComponent + compatibilityComponent + impactComponent,
     100
   );
-  
+
   return {
     total,
     trustComponent: trustScore * config.weights.trust,
@@ -280,7 +152,7 @@ function generateRecruiterView(
   // Determine match level
   let matchLevel: 'excellent' | 'strong' | 'good' | 'fair' | 'poor';
   let recommendation: 'strongly-recommend' | 'recommend' | 'consider' | 'not-recommended';
-  
+
   if (matchScore >= 85) {
     matchLevel = 'excellent';
     recommendation = 'strongly-recommend';
@@ -297,7 +169,7 @@ function generateRecruiterView(
     matchLevel = 'poor';
     recommendation = 'not-recommended';
   }
-  
+
   // Build strengths
   const strengths: string[] = [];
   if (trustResult.totalScore > 75) {
@@ -312,7 +184,7 @@ function generateRecruiterView(
   if (trustResult.isAuthentic && compatibilityResult.compatibilityLevel === 'high') {
     strengths.push('Authentic engineer with excellent role alignment');
   }
-  
+
   // Build concerns
   const concerns: string[] = [];
   if (trustResult.totalScore < 60) {
@@ -327,7 +199,7 @@ function generateRecruiterView(
   if (trustResult.redFlags.length > 0) {
     concerns.push(`${trustResult.redFlags.length} trust-related concerns`);
   }
-  
+
   // Critical red flags only
   const redFlags: string[] = [];
   if (!trustResult.isAuthentic) {
@@ -339,10 +211,10 @@ function generateRecruiterView(
   if (compatibilityResult.compatibilityLevel === 'poor') {
     redFlags.push('Poor role compatibility');
   }
-  
+
   // Generate summary
   const summary = generateSummary(trustResult, compatibilityResult, impactResult, matchScore);
-  
+
   return {
     matchScore,
     matchLevel,
@@ -370,7 +242,7 @@ function generateEngineerView(
 ): EngineerView {
   // Improvement suggestions
   const suggestions: string[] = [];
-  
+
   if (trustResult.totalScore < 70) {
     if (trustResult.redFlags.includes('Insufficient repository diversity')) {
       suggestions.push('Contribute to more diverse repositories to increase trust score');
@@ -379,21 +251,21 @@ function generateEngineerView(
       suggestions.push('Contribute to original repositories, not just forks');
     }
   }
-  
+
   if (compatibilityResult.totalScore < 60) {
     suggestions.push(`Increase ${compatibilityResult.explanation.role}-specific contributions`);
     if (compatibilityResult.negativeSignals.technologyMismatch > 50) {
       suggestions.push('Focus on role-relevant technologies and reduce unrelated contributions');
     }
   }
-  
+
   if (impactResult.totalScore < 60) {
     suggestions.push('Increase merged PR count and collaboration with maintainers');
     if (impactResult.signals.activeRepositories < 3) {
       suggestions.push('Contribute to more repositories to demonstrate breadth');
     }
   }
-  
+
   return {
     trustScore: {
       total: trustResult.totalScore,
@@ -451,7 +323,7 @@ function generateSummary(
   matchScore: number
 ): string {
   const parts: string[] = [];
-  
+
   if (matchScore >= 85) {
     parts.push('Excellent match');
   } else if (matchScore >= 70) {
@@ -461,21 +333,21 @@ function generateSummary(
   } else {
     parts.push('Fair match');
   }
-  
+
   parts.push(`with ${compatibilityResult.explanation.role} role`);
-  
+
   if (trustResult.isAuthentic) {
     parts.push('and authentic profile');
   }
-  
+
   if (compatibilityResult.compatibilityLevel === 'high') {
     parts.push('showing strong role alignment');
   }
-  
+
   if (impactResult.totalScore > 80) {
     parts.push('with high-impact contributions');
   }
-  
+
   return parts.join(', ') + '.';
 }
 
@@ -504,7 +376,7 @@ export function calculateRecruiterMatchScore(
       ...config?.boostFactors,
     },
   };
-  
+
   // Calculate weighted score
   const scoreCalculation = calculateWeightedScore(
     trustResult.totalScore,
@@ -512,7 +384,7 @@ export function calculateRecruiterMatchScore(
     impactResult.totalScore,
     fullConfig
   );
-  
+
   // Generate views
   const recruiterView = generateRecruiterView(
     trustResult,
@@ -525,13 +397,13 @@ export function calculateRecruiterMatchScore(
       impact: scoreCalculation.impactComponent,
     }
   );
-  
+
   const engineerView = generateEngineerView(
     trustResult,
     compatibilityResult,
     impactResult
   );
-  
+
   return {
     totalMatchScore: scoreCalculation.total,
     trustComponent: scoreCalculation.trustComponent,

@@ -17,57 +17,12 @@ import type {
 
 import type {
   ImpactScoreConfig,
-  weights?: {
-    prImpact?: number;
-    collaboration?: number;
-    longevity?: number;
-    quality?: number;
-  };
-  timeDecayFactor?: number;
-  minPRSize?: number;
-  maxPRFrequency?: number;
-  activityWindowMonths?: number;
-  selfMergePenalty?: number;
-}
-
-import type {
   ComponentBreakdown,
   CollaborationBreakdown,
   LongevityBreakdown,
   QualityBreakdown,
   ImpactScoreResult,
-  totalScore: number;
-  components: {
-    prImpact: {
-      score: number;
-      breakdown: ComponentBreakdown;
-    };
-    collaboration: {
-      score: number;
-      breakdown: CollaborationBreakdown;
-    };
-    longevity: {
-      score: number;
-      breakdown: LongevityBreakdown;
-    };
-    quality: {
-      score: number;
-      breakdown: QualityBreakdown;
-    };
-  };
-  signals: {
-    totalMergedPRs: number;
-    selfMergedPRs: number;
-    spamPRs: number;
-    activeRepositories: number;
-    activitySpanMonths: number;
-  };
-  explainability: {
-    topContributingRepos: Array<{ repo: string; prCount: number; score: number }>;
-    recentActivity: Array<{ date: Date; event: string; impact: number }>;
-    penalties: Array<{ reason: string; count: number; impact: number }>;
-  };
-}
+} from '../types/scores';
 
 const DEFAULT_CONFIG: Required<ImpactScoreConfig> = {
   weights: {
@@ -92,7 +47,7 @@ function filterSpamPRs(prs: MergedPR[], config: Required<ImpactScoreConfig>): {
 } {
   const valid: MergedPR[] = [];
   const spam: MergedPR[] = [];
-  
+
   // Group PRs by day to detect frequency spam
   const prsByDay = new Map<string, MergedPR[]>();
   for (const pr of prs) {
@@ -102,14 +57,14 @@ function filterSpamPRs(prs: MergedPR[], config: Required<ImpactScoreConfig>): {
     }
     prsByDay.get(dayKey)!.push(pr);
   }
-  
+
   for (const pr of prs) {
     // Filter by minimum size
     if (pr.filesChanged < config.minPRSize) {
       spam.push(pr);
       continue;
     }
-    
+
     // Filter by frequency (too many PRs in one day)
     const dayKey = pr.mergedAt.toISOString().split('T')[0];
     const dayPRs = prsByDay.get(dayKey) || [];
@@ -117,10 +72,10 @@ function filterSpamPRs(prs: MergedPR[], config: Required<ImpactScoreConfig>): {
       spam.push(pr);
       continue;
     }
-    
+
     valid.push(pr);
   }
-  
+
   return { valid, spam };
 }
 
@@ -133,7 +88,7 @@ function filterSelfMergedPRs(prs: MergedPR[]): {
 } {
   const valid: MergedPR[] = [];
   const selfMerged: MergedPR[] = [];
-  
+
   for (const pr of prs) {
     if (pr.author === pr.mergedBy) {
       selfMerged.push(pr);
@@ -141,7 +96,7 @@ function filterSelfMergedPRs(prs: MergedPR[]): {
       valid.push(pr);
     }
   }
-  
+
   return { valid, selfMerged };
 }
 
@@ -173,33 +128,33 @@ function calculatePRImpactScore(
       },
     };
   }
-  
+
   const now = new Date();
   const referenceDate = now;
-  
+
   // Merged PR count with time decay
   const prCountScore = prs.reduce((sum, pr) => {
     const decay = applyTimeDecay(pr, referenceDate, config.timeDecayFactor);
     return sum + decay;
   }, 0);
   const normalizedPRCount = Math.min(prCountScore / 10, 1) * 100; // Normalize to 0-100
-  
+
   // Review engagement (comments received per PR)
   const totalReviewComments = reviewsReceived.reduce((sum, review) => sum + review.commentCount, 0);
   const avgReviewComments = prs.length > 0 ? totalReviewComments / prs.length : 0;
   const reviewEngagement = Math.min(avgReviewComments / 5, 1) * 100; // Normalize to 0-100
-  
+
   // Acceptance rate (assumed 100% since we only count merged PRs)
   const acceptanceRate = 100;
-  
+
   // Repository diversity (log scale for diminishing returns)
   const uniqueRepos = new Set(prs.map(pr => pr.repository)).size;
   const repoDiversity = Math.min(Math.log10(uniqueRepos + 1) / Math.log10(50), 1) * 100;
-  
+
   // Maintainer trust (percentage of PRs merged by maintainers)
   const maintainerMerges = prs.filter(pr => pr.isMaintainerMerge).length;
   const maintainerTrust = (maintainerMerges / prs.length) * 100;
-  
+
   const score = (
     normalizedPRCount * 0.3 +
     reviewEngagement * 0.25 +
@@ -207,7 +162,7 @@ function calculatePRImpactScore(
     repoDiversity * 0.15 +
     maintainerTrust * 0.15
   );
-  
+
   return {
     score: Math.min(score, 100),
     breakdown: {
@@ -241,11 +196,11 @@ function calculateCollaborationScore(
       },
     };
   }
-  
+
   // Cross-repository contributions
   const uniqueRepos = new Set(prs.map(pr => pr.repository)).size;
   const crossRepoContributions = Math.min(Math.log10(uniqueRepos + 1) / Math.log10(20), 1) * 100;
-  
+
   // Review reciprocity (balance between giving and receiving reviews)
   const reviewsGivenCount = reviewsGiven.length;
   const reviewsReceivedCount = reviewsReceived.length;
@@ -253,26 +208,26 @@ function calculateCollaborationScore(
   const reciprocity = totalReviews > 0
     ? (Math.min(reviewsGivenCount, reviewsReceivedCount) / Math.max(reviewsGivenCount, reviewsReceivedCount)) * 100
     : 0;
-  
+
   // Issue engagement (issues that led to merged PRs)
   const issuesLeadingToPRs = issues.filter(issue => issue.ledToMergedPR).length;
   const issueEngagement = issues.length > 0
     ? (issuesLeadingToPRs / issues.length) * 100
     : 0;
-  
+
   // Team participation (contributions to repos with multiple contributors)
   const teamRepos = repositories.filter(repo => repo.contributorCount > 1).length;
   const teamParticipation = repositories.length > 0
     ? (teamRepos / repositories.length) * 100
     : 0;
-  
+
   const score = (
     crossRepoContributions * 0.3 +
     reciprocity * 0.3 +
     issueEngagement * 0.2 +
     teamParticipation * 0.2
   );
-  
+
   return {
     score: Math.min(score, 100),
     breakdown: {
@@ -301,11 +256,11 @@ function calculateLongevityScore(
       },
     };
   }
-  
+
   // Activity span in months
   const spanMonths = (activitySpan.lastPRDate.getTime() - activitySpan.firstPRDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
   const activitySpanScore = Math.min(spanMonths / 24, 1) * 100; // 24 months = 100
-  
+
   // Consistency (months with at least one merged PR)
   const monthsWithPRs = new Set<string>();
   for (const pr of prs) {
@@ -315,17 +270,17 @@ function calculateLongevityScore(
   const consistency = spanMonths > 0
     ? (monthsWithPRs.size / Math.max(spanMonths, 1)) * 100
     : 0;
-  
+
   // Temporal distribution (contributions across multiple years)
   const years = new Set(prs.map(pr => pr.mergedAt.getFullYear())).size;
   const temporalDistribution = Math.min(years / 3, 1) * 100; // 3+ years = 100
-  
+
   const score = (
     activitySpanScore * 0.4 +
     consistency * 0.35 +
     temporalDistribution * 0.25
   );
-  
+
   return {
     score: Math.min(score, 100),
     breakdown: {
@@ -341,7 +296,7 @@ function calculateLongevityScore(
  */
 function calculateQualityScore(
   prs: MergedPR[],
-  reviewsReceived: CodeReview[]
+  _reviewsReceived: CodeReview[]
 ): { score: number; breakdown: QualityBreakdown } {
   if (prs.length === 0) {
     return {
@@ -354,32 +309,32 @@ function calculateQualityScore(
       },
     };
   }
-  
+
   // Review depth (average review rounds)
   const avgReviewRounds = prs.reduce((sum, pr) => sum + pr.reviewRounds, 0) / prs.length;
   const reviewDepth = Math.min(avgReviewRounds / 3, 1) * 100; // 3+ rounds = 100
-  
+
   // Maintainer trust (PRs merged without significant changes)
   const maintainerMerges = prs.filter(pr => pr.isMaintainerMerge).length;
   const maintainerTrust = (maintainerMerges / prs.length) * 100;
-  
+
   // Contribution complexity (PRs touching multiple files/directories)
   const avgFilesChanged = prs.reduce((sum, pr) => sum + pr.filesChanged, 0) / prs.length;
   const avgDirectoriesTouched = prs.reduce((sum, pr) => sum + pr.directoriesTouched, 0) / prs.length;
   const complexity = Math.min((avgFilesChanged + avgDirectoriesTouched) / 10, 1) * 100;
-  
+
   // Anti-spam score (penalize forks, reward original repos)
   const forkPRs = prs.filter(pr => pr.isFork).length;
   const forkPenalty = (forkPRs / prs.length) * 50; // Max 50% penalty
   const antiSpamScore = Math.max(100 - forkPenalty, 0);
-  
+
   const score = (
     reviewDepth * 0.3 +
     maintainerTrust * 0.3 +
     complexity * 0.25 +
     antiSpamScore * 0.15
   );
-  
+
   return {
     score: Math.min(score, 100),
     breakdown: {
@@ -406,13 +361,13 @@ export function calculateImpactScore(
       ...config?.weights,
     },
   };
-  
+
   // Filter out self-merged PRs
   const { valid: validPRs, selfMerged } = filterSelfMergedPRs(githubActivity.mergedPRs);
-  
+
   // Filter out spam PRs
   const { valid: cleanPRs, spam } = filterSpamPRs(validPRs, fullConfig);
-  
+
   // Calculate component scores
   const prImpact = calculatePRImpactScore(cleanPRs, githubActivity.reviewsReceived, fullConfig);
   const collaboration = calculateCollaborationScore(
@@ -424,7 +379,7 @@ export function calculateImpactScore(
   );
   const longevity = calculateLongevityScore(cleanPRs, githubActivity.activitySpan);
   const quality = calculateQualityScore(cleanPRs, githubActivity.reviewsReceived);
-  
+
   // Calculate total weighted score
   const totalScore = (
     prImpact.score * (fullConfig.weights.prImpact ?? 0.4) +
@@ -432,17 +387,17 @@ export function calculateImpactScore(
     longevity.score * (fullConfig.weights.longevity ?? 0.2) +
     quality.score * (fullConfig.weights.quality ?? 0.1)
   );
-  
+
   // Calculate activity span in months
-  const activitySpanMonths = (githubActivity.activitySpan.lastPRDate.getTime() - 
+  const activitySpanMonths = (githubActivity.activitySpan.lastPRDate.getTime() -
     githubActivity.activitySpan.firstPRDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-  
+
   // Build explainability data
   const repoContributions = new Map<string, number>();
   for (const pr of cleanPRs) {
     repoContributions.set(pr.repository, (repoContributions.get(pr.repository) || 0) + 1);
   }
-  
+
   const topContributingRepos = Array.from(repoContributions.entries())
     .map(([repo, count]) => ({
       repo,
@@ -451,7 +406,7 @@ export function calculateImpactScore(
     }))
     .sort((a, b) => b.prCount - a.prCount)
     .slice(0, 10);
-  
+
   const recentActivity = cleanPRs
     .slice(-10)
     .map(pr => ({
@@ -460,7 +415,7 @@ export function calculateImpactScore(
       impact: applyTimeDecay(pr, new Date(), fullConfig.timeDecayFactor) * 10,
     }))
     .reverse();
-  
+
   const penalties = [
     {
       reason: 'Self-merged PRs excluded',
@@ -473,7 +428,7 @@ export function calculateImpactScore(
       impact: 0,
     },
   ];
-  
+
   return {
     totalScore: Math.min(Math.max(totalScore, 0), 100),
     components: {

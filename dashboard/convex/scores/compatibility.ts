@@ -117,32 +117,32 @@ function analyzeFileChanges(files: FileChangeAnalysis[], role: RoleType): {
   const relevantFiles: FileChangeAnalysis[] = [];
   const matchedTechnologies = new Set<string>();
   const mismatchedTechnologies = new Set<string>();
-  
+
   for (const file of files) {
     const ext = file.fileExtension.toLowerCase();
     const path = file.filePath.toLowerCase();
-    
+
     // Check for positive matches
     let isRelevant = false;
     if (indicators.fileExtensions.some(e => ext === e)) {
       isRelevant = true;
       matchedTechnologies.add(ext);
     }
-    
+
     if (indicators.keywords.some(kw => path.includes(kw) || file.directory.includes(kw))) {
       isRelevant = true;
     }
-    
+
     // Check for negative matches
     if (indicators.negativeIndicators.some(ni => path.includes(ni) || file.directory.includes(ni))) {
       mismatchedTechnologies.add(ext);
     }
-    
+
     if (isRelevant) {
       relevantFiles.push(file);
     }
   }
-  
+
   return {
     relevantFiles: relevantFiles.length,
     totalFiles: files.length,
@@ -161,22 +161,22 @@ function calculateTechnologyStackMatch(
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   const matchedTechnologies = new Set<string>();
   const mismatchedTechnologies = new Set<string>();
-  
+
   // Analyze PRs
   for (const pr of activity.prs) {
     for (const file of pr.filesChanged) {
       const ext = file.fileExtension.toLowerCase();
       const path = file.filePath.toLowerCase();
-      
+
       if (indicators.fileExtensions.includes(ext)) {
         matchedTechnologies.add(ext);
       }
-      
+
       if (indicators.negativeIndicators.some(ni => path.includes(ni))) {
         mismatchedTechnologies.add(ext);
       }
     }
-    
+
     // Check languages
     for (const lang of pr.languages) {
       if (indicators.languages.includes(lang.toLowerCase())) {
@@ -184,7 +184,7 @@ function calculateTechnologyStackMatch(
       }
     }
   }
-  
+
   // Analyze repositories
   for (const repo of activity.repositories) {
     for (const [lang, percentage] of repo.languages.entries()) {
@@ -192,20 +192,20 @@ function calculateTechnologyStackMatch(
         matchedTechnologies.add(lang);
       }
     }
-    
+
     // Check topics and description
     const repoText = `${repo.description || ''} ${repo.topics.join(' ')}`.toLowerCase();
     if (indicators.keywords.some(kw => repoText.includes(kw))) {
       matchedTechnologies.add('repository-keyword');
     }
   }
-  
+
   // Calculate score
   const matchCount = matchedTechnologies.size;
   const mismatchCount = mismatchedTechnologies.size;
   const baseScore = Math.min(matchCount * 15, 100); // Up to 100 for 7+ matches
   const penalty = Math.min(mismatchCount * 10, 50); // Up to 50 point penalty
-  
+
   return {
     score: Math.max(baseScore - penalty, 0),
     matched: Array.from(matchedTechnologies),
@@ -222,28 +222,28 @@ function calculateDomainContributionDepth(
 ): { score: number; relevantPRs: number; totalPRs: number } {
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   let relevantPRs = 0;
-  
+
   for (const pr of activity.prs) {
     const analysis = analyzeFileChanges(pr.filesChanged, role);
     const relevanceRatio = analysis.totalFiles > 0 ? analysis.relevantFiles / analysis.totalFiles : 0;
-    
+
     // PR is relevant if >50% of files are role-relevant
     if (relevanceRatio > 0.5) {
       relevantPRs++;
     }
-    
+
     // Also check PR title/body for keywords
     const prText = `${pr.title} ${pr.body || ''}`.toLowerCase();
     if (indicators.keywords.some(kw => prText.includes(kw))) {
       relevantPRs++;
     }
   }
-  
+
   const totalPRs = activity.prs.length;
   const depthScore = totalPRs > 0
     ? (relevantPRs / totalPRs) * 100
     : 0;
-  
+
   return {
     score: depthScore,
     relevantPRs,
@@ -260,23 +260,23 @@ function calculateArchitecturePatternMatch(
 ): { score: number; patterns: string[] } {
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   const detectedPatterns = new Set<string>();
-  
+
   for (const pr of activity.prs) {
     const prText = `${pr.title} ${pr.body || ''}`.toLowerCase();
     const filePaths = pr.filesChanged.map(f => f.filePath.toLowerCase()).join(' ');
-    
+
     for (const pattern of indicators.architecturePatterns) {
       if (prText.includes(pattern) || filePaths.includes(pattern)) {
         detectedPatterns.add(pattern);
       }
     }
-    
+
     // Detect patterns from file structure
-    if (pr.isAPIC change) detectedPatterns.add('api-design');
+    if (pr.isAPIChange) detectedPatterns.add('api-design');
     if (pr.isInfrastructureChange) detectedPatterns.add('infrastructure');
     if (pr.isDatabaseChange) detectedPatterns.add('data-layer');
   }
-  
+
   for (const repo of activity.repositories) {
     const repoText = `${repo.description || ''} ${repo.topics.join(' ')}`.toLowerCase();
     for (const pattern of indicators.architecturePatterns) {
@@ -285,9 +285,9 @@ function calculateArchitecturePatternMatch(
       }
     }
   }
-  
+
   const score = Math.min(detectedPatterns.size * 20, 100); // 5+ patterns = 100
-  
+
   return {
     score,
     patterns: Array.from(detectedPatterns),
@@ -304,7 +304,7 @@ function calculateFileTypeAlignment(
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   let relevantFiles = 0;
   let totalFiles = 0;
-  
+
   for (const pr of activity.prs) {
     for (const file of pr.filesChanged) {
       totalFiles++;
@@ -313,7 +313,7 @@ function calculateFileTypeAlignment(
       }
     }
   }
-  
+
   return totalFiles > 0 ? (relevantFiles / totalFiles) * 100 : 0;
 }
 
@@ -327,12 +327,12 @@ function calculateActivityTypeMatch(
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   let relevantActivities = 0;
   let totalActivities = activity.prs.length + activity.issues.length;
-  
+
   // Analyze PRs
   for (const pr of activity.prs) {
     let isRelevant = false;
-    
-    if (role === 'backend' && (pr.isAPIC change || pr.isDatabaseChange)) {
+
+    if (role === 'backend' && (pr.isAPIChange || pr.isDatabaseChange)) {
       isRelevant = true;
     } else if (role === 'frontend' && pr.isUIChange) {
       isRelevant = true;
@@ -341,29 +341,29 @@ function calculateActivityTypeMatch(
     } else if (role === 'devops' && pr.isConfigChange) {
       isRelevant = true;
     }
-    
+
     const prText = `${pr.title} ${pr.body || ''}`.toLowerCase();
     if (indicators.keywords.some(kw => prText.includes(kw))) {
       isRelevant = true;
     }
-    
+
     if (isRelevant) relevantActivities++;
   }
-  
+
   // Analyze issues
   for (const issue of activity.issues) {
     const issueText = `${issue.title} ${issue.body || ''}`.toLowerCase();
     if (indicators.keywords.some(kw => issueText.includes(kw))) {
       relevantActivities++;
     }
-    
+
     if (role === 'devops' && issue.isInfrastructure) {
       relevantActivities++;
     } else if (role === 'security' && issue.isSecurity) {
       relevantActivities++;
     }
   }
-  
+
   return totalActivities > 0 ? (relevantActivities / totalActivities) * 100 : 0;
 }
 
@@ -376,23 +376,23 @@ function calculateRepositoryTypeMatch(
 ): number {
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   let relevantRepos = 0;
-  
+
   for (const repo of activity.repositories) {
     if (repo.isFork) continue; // Skip forks
-    
+
     // Check primary language
     if (indicators.languages.includes(repo.primaryLanguage.toLowerCase())) {
       relevantRepos++;
       continue;
     }
-    
+
     // Check topics and description
     const repoText = `${repo.description || ''} ${repo.topics.join(' ')}`.toLowerCase();
     if (indicators.keywords.some(kw => repoText.includes(kw))) {
       relevantRepos++;
     }
   }
-  
+
   const totalRepos = activity.repositories.filter(r => !r.isFork).length;
   return totalRepos > 0 ? (relevantRepos / totalRepos) * 100 : 0;
 }
@@ -406,7 +406,7 @@ function calculateReviewDomainExpertise(
 ): number {
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
   let relevantReviews = 0;
-  
+
   for (const review of activity.codeReviews) {
     for (const file of review.reviewedFiles) {
       const ext = file.substring(file.lastIndexOf('.')).toLowerCase();
@@ -415,7 +415,7 @@ function calculateReviewDomainExpertise(
         break;
       }
     }
-    
+
     for (const lang of review.languages) {
       if (indicators.languages.includes(lang.toLowerCase())) {
         relevantReviews++;
@@ -423,7 +423,7 @@ function calculateReviewDomainExpertise(
       }
     }
   }
-  
+
   const totalReviews = activity.codeReviews.length;
   return totalReviews > 0 ? (relevantReviews / totalReviews) * 100 : 0;
 }
@@ -436,7 +436,7 @@ function calculateNegativeSignals(
   role: RoleType
 ): NegativeSignals {
   const indicators = ROLE_TECHNOLOGY_INDICATORS[role];
-  
+
   // Technology mismatch
   let mismatchCount = 0;
   for (const pr of activity.prs) {
@@ -448,22 +448,22 @@ function calculateNegativeSignals(
     }
   }
   const technologyMismatch = Math.min((mismatchCount / activity.prs.length) * 100, 100);
-  
+
   // Domain contradiction (high activity in opposite domain)
   const contradictionScore = technologyMismatch; // Simplified
-  
+
   // Insufficient depth (not enough relevant contributions)
   const depthAnalysis = calculateDomainContributionDepth(activity, role);
   const insufficientDepth = depthAnalysis.totalPRs < 5 ? 100 : 0;
-  
+
   // Architecture mismatch
   const archAnalysis = calculateArchitecturePatternMatch(activity, role);
   const architectureMismatch = archAnalysis.patterns.length === 0 ? 50 : 0;
-  
+
   // Technology overweight (too much focus on wrong tech)
   const techAnalysis = calculateTechnologyStackMatch(activity, role);
   const technologyOverweight = techAnalysis.mismatched.length > techAnalysis.matched.length ? 70 : 0;
-  
+
   return {
     technologyMismatch,
     domainContradiction: contradictionScore,
@@ -486,7 +486,7 @@ function getRoleWeights(role: RoleType): Record<keyof CompatibilitySignals, numb
     repositoryTypeMatch: 0.1,
     reviewDomainExpertise: 0.05,
   };
-  
+
   // Adjust weights based on role
   switch (role) {
     case 'backend':
@@ -528,7 +528,7 @@ export function calculateCompatibilityScore(
 ): CompatibilityScoreResult {
   const role = query.role;
   const weights = getRoleWeights(role);
-  
+
   // Calculate all signals
   const techStack = calculateTechnologyStackMatch(activity, role);
   const contributionDepth = calculateDomainContributionDepth(activity, role);
@@ -537,7 +537,7 @@ export function calculateCompatibilityScore(
   const activityType = calculateActivityTypeMatch(activity, role);
   const repositoryType = calculateRepositoryTypeMatch(activity, role);
   const reviewExpertise = calculateReviewDomainExpertise(activity, role);
-  
+
   const signals: CompatibilitySignals = {
     technologyStackMatch: techStack.score,
     domainContributionDepth: contributionDepth.score,
@@ -547,10 +547,10 @@ export function calculateCompatibilityScore(
     repositoryTypeMatch: repositoryType,
     reviewDomainExpertise: reviewExpertise,
   };
-  
+
   // Calculate negative signals
   const negativeSignals = calculateNegativeSignals(activity, role);
-  
+
   // Calculate weighted total score
   let totalScore = (
     signals.technologyStackMatch * weights.technologyStackMatch +
@@ -561,7 +561,7 @@ export function calculateCompatibilityScore(
     signals.repositoryTypeMatch * weights.repositoryTypeMatch +
     signals.reviewDomainExpertise * weights.reviewDomainExpertise
   );
-  
+
   // Apply negative signal penalties
   totalScore -= (
     negativeSignals.technologyMismatch * 0.15 +
@@ -570,21 +570,21 @@ export function calculateCompatibilityScore(
     negativeSignals.architectureMismatch * 0.1 +
     negativeSignals.technologyOverweight * 0.15
   );
-  
+
   totalScore = Math.max(0, Math.min(100, totalScore));
-  
+
   // Determine compatibility level
   let compatibilityLevel: 'high' | 'medium' | 'low' | 'poor';
   if (totalScore >= 75) compatibilityLevel = 'high';
   else if (totalScore >= 50) compatibilityLevel = 'medium';
   else if (totalScore >= 25) compatibilityLevel = 'low';
   else compatibilityLevel = 'poor';
-  
+
   // Build explanation
   const strengths: string[] = [];
   const weaknesses: string[] = [];
   const evidence: Array<{ type: string; description: string; score: number }> = [];
-  
+
   if (techStack.score > 70) {
     strengths.push(`Strong technology stack match with ${techStack.matched.length} relevant technologies`);
     evidence.push({
@@ -595,7 +595,7 @@ export function calculateCompatibilityScore(
   } else if (techStack.score < 30) {
     weaknesses.push('Limited technology stack alignment');
   }
-  
+
   if (contributionDepth.score > 70) {
     strengths.push(`Deep domain contributions: ${contributionDepth.relevantPRs}/${contributionDepth.totalPRs} relevant PRs`);
     evidence.push({
@@ -604,7 +604,7 @@ export function calculateCompatibilityScore(
       score: contributionDepth.score,
     });
   }
-  
+
   if (architecture.patterns.length > 0) {
     strengths.push(`Recognized architecture patterns: ${architecture.patterns.slice(0, 3).join(', ')}`);
     evidence.push({
@@ -613,15 +613,15 @@ export function calculateCompatibilityScore(
       score: architecture.score,
     });
   }
-  
+
   if (negativeSignals.technologyMismatch > 50) {
     weaknesses.push('Significant contributions in mismatched technologies');
   }
-  
+
   if (negativeSignals.insufficientDepth > 0) {
     weaknesses.push('Insufficient contribution depth in role domain');
   }
-  
+
   return {
     totalScore,
     compatibilityLevel,
