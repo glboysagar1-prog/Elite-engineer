@@ -1,0 +1,33 @@
+{
+  "name": "wecraft-impact-score",
+  "version": "1.0.0",
+  "description": "Impact Score calculator for Wecraft - Elite Engineers Discovery Platform",
+  "main": "dist/impactScore.js",
+  "types": "dist/impactScore.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": [
+    "github",
+    "impact-score",
+    "engineer-discovery"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/rest": "^20.0.0",
+    "inngest": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  }
+}
