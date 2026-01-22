@@ -176,7 +176,7 @@ export function CandidateTable({ candidates, selectedIds, onSelect, onCompare }:
                                                 <h4 className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
                                                     <ShieldCheck className="h-3 w-3" /> Score Breakdown
                                                 </h4>
-                                                <div className="text-sm border rounded-md p-3 bg-white dark:bg-slate-900">
+                                                <div className="text-sm border rounded-md p-3 bg-white dark:bg-slate-900 shadow-sm">
                                                     <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                                                         <span className="text-slate-500">Account Authenticity</span>
                                                         <span className="font-mono font-bold">{candidate.trustScore.components.accountAuthenticity}</span>
@@ -189,6 +189,47 @@ export function CandidateTable({ candidates, selectedIds, onSelect, onCompare }:
                                                         <span className="text-slate-500">Recency</span>
                                                         <span className="text-xs">{new Date(candidate.lastActive).toLocaleDateString()}</span>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Contact Section */}
+                                            <div className="space-y-2">
+                                                <h4 className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
+                                                    <Target className="h-3 w-3" /> Contact Information
+                                                </h4>
+                                                <div className="text-sm border rounded-md p-3 bg-white dark:bg-slate-900 shadow-sm space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-slate-500">Email</span>
+                                                        <a href={`mailto:${candidate.engineer.email}`} className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                                                            {candidate.engineer.email}
+                                                        </a>
+                                                    </div>
+                                                    {candidate.engineer.phone && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-xs text-slate-500">Phone</span>
+                                                            <span className="text-slate-700 dark:text-slate-300 font-medium">
+                                                                {candidate.engineer.phone}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {candidate.engineer.linkedinUrl && (
+                                                        <div className="pt-1">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="w-full h-8 text-xs gap-2 border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-900/20 dark:text-blue-300"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    window.open(candidate.engineer.linkedinUrl, '_blank');
+                                                                }}
+                                                            >
+                                                                <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24">
+                                                                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                                                                </svg>
+                                                                Connect on LinkedIn
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

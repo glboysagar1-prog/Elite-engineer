@@ -32,7 +32,7 @@ export function RecruiterDashboard() {
 
             return {
                 id: eng._id,
-                role: eng.role as any,
+                role: details.suggestedRole || "Engineer",
                 matchScore: {
                     matchScore: matchScoreValue,
                     matchLevel: matchScoreValue > 90 ? "Excellent" : matchScoreValue > 75 ? "Good" : "Fair",
@@ -78,13 +78,16 @@ export function RecruiterDashboard() {
                     name: eng.name,
                     username: eng.username || "unknown",
                     avatarUrl: eng.avatarUrl,
+                    linkedinUrl: eng.linkedinUrl,
+                    phone: eng.phone,
+                    email: eng.email,
                     account: {
                         createdAt: eng._creationTime,
                         location: "Remote",
                         company: "Elite Pool"
                     }
                 },
-                techStack: [] as string[],
+                techStack: details.techStack || [],
                 lastActive: score.lastUpdated || eng._creationTime,
                 shortReason: "Verified Elite Engineer based on GitHub audit.",
                 evidence: score.evidence || [],
@@ -101,12 +104,18 @@ export function RecruiterDashboard() {
             if (!matchesSearch) return false;
 
             // 2. Role Filter
-            // Note: Since we only fetch engineers, this might be redundant unless we filter by sub-roles later
+            if (filters.role && c.role !== filters.role) return false;
 
             // 3. Trust Score Filter
             if (c.trustScore.total < filters.minTrustScore) return false;
 
-            // 4. Tech Stack Filter (Currently empty/mock tech stack)
+            // 4. Tech Stack Filter
+            if (filters.techStack.length > 0) {
+                const hasMatchingTech = filters.techStack.every((tech: string) =>
+                    c.techStack.includes(tech)
+                );
+                if (!hasMatchingTech) return false;
+            }
 
             // 5. Recency Filter
             if (filters.recency !== "all") {

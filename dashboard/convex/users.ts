@@ -14,6 +14,8 @@ export const updateScore = internalMutation({
             contributionAuthenticity: v.number(),
             prImpact: v.number(),
             collaboration: v.number(),
+            suggestedRole: v.optional(v.string()),
+            techStack: v.optional(v.array(v.string())),
         }),
         evidence: v.array(v.any()), // flexible for now
     },
@@ -164,6 +166,8 @@ export const seedDemoData = mutation({
                 name: "Alex Rivera",
                 username: "alex_backend_pro",
                 email: "alex@example.com",
+                linkedinUrl: "https://linkedin.com/in/alex-rivera-dev",
+                phone: "+1 (555) 123-4567",
                 avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
                 trustScore: 94,
                 impactScore: 88,
@@ -172,6 +176,8 @@ export const seedDemoData = mutation({
                     contributionAuthenticity: 95,
                     prImpact: 92,
                     collaboration: 85,
+                    suggestedRole: "Backend",
+                    techStack: ["Node.js", "Go", "PostgreSQL", "Docker"]
                 },
                 evidence: [
                     {
@@ -196,6 +202,8 @@ export const seedDemoData = mutation({
                 name: "Sarah Chen",
                 username: "sarah_ui_arch",
                 email: "sarah@example.com",
+                linkedinUrl: "https://linkedin.com/in/sarah-chen-ui",
+                phone: "+1 (555) 987-6543",
                 avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
                 trustScore: 91,
                 impactScore: 95,
@@ -204,6 +212,8 @@ export const seedDemoData = mutation({
                     contributionAuthenticity: 90,
                     prImpact: 98,
                     collaboration: 94,
+                    suggestedRole: "Frontend",
+                    techStack: ["React", "Typescript", "Next.js", "Tailwind"]
                 },
                 evidence: [
                     {
@@ -220,6 +230,8 @@ export const seedDemoData = mutation({
                 name: "Marcus Thorne",
                 username: "marcus_infra",
                 email: "marcus@example.com",
+                linkedinUrl: "https://linkedin.com/in/marcus-thorne-infra",
+                phone: "+1 (555) 456-7890",
                 avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
                 trustScore: 85,
                 impactScore: 92,
@@ -228,6 +240,8 @@ export const seedDemoData = mutation({
                     contributionAuthenticity: 85,
                     prImpact: 94,
                     collaboration: 90,
+                    suggestedRole: "DevOps",
+                    techStack: ["AWS", "Kubernetes", "Docker", "Python"]
                 },
                 evidence: [
                     {
@@ -256,11 +270,17 @@ export const seedDemoData = mutation({
                     username: eng.username,
                     email: eng.email,
                     avatarUrl: eng.avatarUrl,
+                    linkedinUrl: eng.linkedinUrl,
+                    phone: eng.phone,
                     role: "engineer",
                     tokenIdentifier,
                 });
             } else {
                 userId = existing._id;
+                await ctx.db.patch(userId, {
+                    linkedinUrl: eng.linkedinUrl,
+                    phone: eng.phone,
+                });
             }
 
             const existingScore = await ctx.db

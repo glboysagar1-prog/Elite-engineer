@@ -13,7 +13,6 @@ import type * as scores_compatibility from "../scores/compatibility.js";
 import type * as scores_impact from "../scores/impact.js";
 import type * as scores_recruiterMatch from "../scores/recruiterMatch.js";
 import type * as scores_trust from "../scores/trust.js";
-import type * as seed from "../seed.js";
 import type * as types_github from "../types/github.js";
 import type * as types_github_api from "../types/github_api.js";
 import type * as types_roles from "../types/roles.js";
@@ -32,7 +31,6 @@ declare const fullApi: ApiFromModules<{
   "scores/impact": typeof scores_impact;
   "scores/recruiterMatch": typeof scores_recruiterMatch;
   "scores/trust": typeof scores_trust;
-  seed: typeof seed;
   "types/github": typeof types_github;
   "types/github_api": typeof types_github_api;
   "types/roles": typeof types_roles;

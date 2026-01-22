@@ -9,6 +9,8 @@ export default defineSchema({
         email: v.string(),
         username: v.optional(v.string()), // GitHub username
         avatarUrl: v.optional(v.string()),
+        linkedinUrl: v.optional(v.string()),
+        phone: v.optional(v.string()),
     }).index("by_token", ["tokenIdentifier"])
         .index("by_username", ["username"]),
 
@@ -23,6 +25,8 @@ export default defineSchema({
             contributionAuthenticity: v.number(),
             prImpact: v.number(),
             collaboration: v.number(),
+            suggestedRole: v.optional(v.string()),
+            techStack: v.optional(v.array(v.string())),
         }),
         evidence: v.array(v.any()), // Stores evidence items
     }).index("by_user", ["userId"]),
